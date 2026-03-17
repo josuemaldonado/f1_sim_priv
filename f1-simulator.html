@@ -145,6 +145,29 @@ select option{background:var(--bg3)}
 .confirm-sub{font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.5;padding:10px 12px;background:rgba(255,255,255,.03);border-left:2px solid var(--border-bright);border-radius:0 3px 3px 0}
 /* EDITING HIGHLIGHT */
 .form-editing{border-color:var(--accent)!important;background:rgba(0,212,255,.04)!important}
+/* SPRINT STYLES */
+:root{--sprint:#FF6B00}
+.weekend-toggle{display:flex;gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden;margin-bottom:20px}
+.wt-btn{flex:1;padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--bg3);color:var(--text-dim);border:none;cursor:pointer;transition:all .2s;text-align:center}
+.wt-btn.active-std{background:rgba(232,0,45,.15);color:var(--red);border-right:1px solid rgba(232,0,45,.3)}
+.wt-btn.active-spr{background:rgba(255,107,0,.15);color:var(--sprint);border-left:1px solid rgba(255,107,0,.3)}
+.session-block{background:var(--panel);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.session-header{padding:10px 18px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.025);border-bottom:1px solid var(--border)}
+.session-label{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.session-label::before{content:'';display:block;width:3px;height:12px;border-radius:1px}
+.session-gp .session-label::before{background:var(--red)}
+.session-sprint .session-label::before{background:var(--sprint)}
+.session-sprint .session-header{background:rgba(255,107,0,.05);border-bottom-color:rgba(255,107,0,.2)}
+.session-sprint{border-color:rgba(255,107,0,.25)}
+.sprint-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 8px;background:rgba(255,107,0,.2);border:1px solid rgba(255,107,0,.5);color:var(--sprint);border-radius:2px}
+.gp-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 8px;background:rgba(232,0,45,.2);border:1px solid rgba(232,0,45,.4);color:var(--red);border-radius:2px}
+.pts-sys-sprint .pbadge{border-color:rgba(255,107,0,.3)}.pts-sys-sprint .pbadge .pv{color:var(--sprint)}
+.session-pts-row{padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);background:rgba(0,0,0,.2)}
+.rrow-sprint{border-color:rgba(255,107,0,.25)!important}
+.rrow-sprint:hover{border-color:rgba(255,107,0,.5)!important}
+.pts-e-sprint{color:var(--sprint)!important}
+.history-sprint-badge{font-family:'Barlow Condensed';font-size:10px;font-weight:700;letter-spacing:1px;padding:1px 6px;background:rgba(255,107,0,.15);border:1px solid rgba(255,107,0,.4);color:var(--sprint);border-radius:2px;margin-left:6px}
+.rdot.sprint-win{background:rgba(255,107,0,.15);border-color:var(--sprint);color:var(--sprint)}
 /* EMPTY */
 .empty{padding:60px 20px;text-align:center}
 .empty .ico{font-size:48px;margin-bottom:16px;opacity:.3}
@@ -250,25 +273,60 @@ select option{background:var(--bg3)}
           <label style="margin:0;white-space:nowrap">Race Name</label>
           <input type="text" id="raceName" placeholder="e.g. Bahrain GP" style="width:180px">
         </div>
-        <button class="btn btn-p" onclick="submitRace()">✓ Submit Race</button>
+        <button class="btn btn-p" onclick="submitRace()" id="submitRaceBtn">✓ Submit Race</button>
       </div>
     </div>
+
+    <!-- WEEKEND TYPE TOGGLE -->
+    <div class="weekend-toggle">
+      <button class="wt-btn active-std" id="wtStd" onclick="setWeekendType('standard')">🏁 Standard Weekend</button>
+      <button class="wt-btn" id="wtSpr" onclick="setWeekendType('sprint')">⚡ Sprint Weekend</button>
+    </div>
+
     <div class="g2" style="gap:20px;align-items:start">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Finishing Order</div>
-          <div style="font-size:11px;color:var(--text-muted)">⠿ Drag to reorder</div>
+      <!-- LEFT COLUMN: session grids -->
+      <div id="sessionsCol">
+
+        <!-- SPRINT SECTION (hidden by default) -->
+        <div id="sprintSection" style="display:none">
+          <div class="session-block session-sprint">
+            <div class="session-header">
+              <div class="session-label"><span class="sprint-badge">SPRINT</span> Sprint Race — Finishing Order</div>
+              <div style="font-size:11px;color:var(--text-muted)">⠿ Drag to reorder</div>
+            </div>
+            <div class="rgrid" id="sprintResultGrid"></div>
+            <div class="session-pts-row pts-sys-sprint" id="sprintPtsBadges"></div>
+          </div>
         </div>
-        <div class="rgrid" id="raceResultGrid"></div>
-        <div class="flrow">
-          <span class="flbadge">FASTEST LAP</span>
-          <select id="flDriver" style="width:auto;flex:1"><option value="">— No bonus —</option></select>
-          <span style="font-size:12px;color:var(--text-muted)">+1 pt if P1–P10</span>
+
+        <!-- GRAND PRIX SECTION -->
+        <div class="session-block session-gp">
+          <div class="session-header">
+            <div class="session-label"><span class="gp-badge">GRAND PRIX</span> Race — Finishing Order</div>
+            <div style="font-size:11px;color:var(--text-muted)">⠿ Drag to reorder</div>
+          </div>
+          <div class="rgrid" id="raceResultGrid"></div>
+          <div class="flrow">
+            <span class="flbadge">FASTEST LAP</span>
+            <select id="flDriver" style="width:auto;flex:1"><option value="">— No bonus —</option></select>
+            <span style="font-size:12px;color:var(--text-muted)">+1 pt if P1–P10</span>
+          </div>
         </div>
+
       </div>
+
+      <!-- RIGHT COLUMN: points + stats -->
       <div>
+        <div id="sprintPtsPanel" style="display:none">
+          <div class="panel" style="margin-bottom:16px;border-color:rgba(255,107,0,.25)">
+            <div class="panel-header" style="background:rgba(255,107,0,.05);border-bottom-color:rgba(255,107,0,.2)">
+              <div class="panel-title" style="color:var(--sprint)">⚡ Sprint Points</div>
+            </div>
+            <div class="pts-sys pts-sys-sprint" id="sprintPtsBadgesPanel"></div>
+          </div>
+        </div>
         <div class="panel">
-          <div class="panel-header"><div class="panel-title">Points Being Awarded</div></div>
+          <div class="panel-header"><div class="panel-title" id="gpPtsTitle">Points Being Awarded</div></div>
           <div class="pts-sys" id="ptsBadges"></div>
         </div>
         <div class="g3" style="margin-top:16px">
@@ -290,7 +348,7 @@ select option{background:var(--bg3)}
       <table class="stbl">
         <thead><tr>
           <th>POS</th><th>DRIVER</th><th>TEAM</th>
-          <th style="text-align:center">R</th><th style="text-align:center">W</th><th style="text-align:center">PDM</th>
+          <th style="text-align:center">R</th><th style="text-align:center">W</th><th style="text-align:center;color:var(--sprint)">SW</th><th style="text-align:center">PDM</th>
           <th style="text-align:right">GAP</th><th class="pbc"></th><th style="text-align:right">PTS</th>
         </tr></thead>
         <tbody id="drvTbody"></tbody>
@@ -348,15 +406,21 @@ select option{background:var(--bg3)}
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-var drivers=[], races=[], raceOrder=[], dragSrc=null;
-var STORAGE_KEY='f1sim_v3';
-var PTS={standard:[25,18,15,12,10,8,6,4,2,1],legacy:[10,8,6,5,4,3,2,1],custom:[]};
+var drivers=[], races=[], raceOrder=[], sprintOrder=[], dragSrc=null, weekendType='standard';
+var STORAGE_KEY='f1sim_v4';
+var PTS={
+  standard:[25,18,15,12,10,8,6,4,2,1],
+  legacy:[10,8,6,5,4,3,2,1],
+  custom:[]
+};
+// Sprint race points (official F1 2023+ format: top 8 score)
+var SPRINT_PTS=[8,7,6,5,4,3,2,1];
 
 // ─── PERSISTENCE ─────────────────────────────────────────────────────────────
 function saveState(){
   try{
     var data={
-      drivers:drivers,races:races,raceOrder:raceOrder,
+      drivers:drivers,races:races,raceOrder:raceOrder,sprintOrder:sprintOrder,
       season:document.getElementById('seasonYear').value,
       pointsSystem:document.getElementById('pointsSystem').value,
       customPoints:document.getElementById('customPoints').value,
@@ -376,6 +440,7 @@ function loadState(){
     drivers=data.drivers||[];
     races=data.races||[];
     raceOrder=data.raceOrder||[];
+    sprintOrder=data.sprintOrder||[];
     if(data.season)document.getElementById('seasonYear').value=data.season;
     if(data.pointsSystem){
       document.getElementById('pointsSystem').value=data.pointsSystem;
@@ -422,13 +487,14 @@ function importData(e){
   reader.onload=function(ev){
     try{
       var data=JSON.parse(ev.target.result);
-      drivers=data.drivers||[];races=data.races||[];raceOrder=data.raceOrder||[];
+      drivers=data.drivers||[];races=data.races||[];raceOrder=data.raceOrder||[];sprintOrder=data.sprintOrder||[];
       if(data.season)document.getElementById('seasonYear').value=data.season;
       if(data.pointsSystem){document.getElementById('pointsSystem').value=data.pointsSystem;document.getElementById('customPtsArea').style.display=data.pointsSystem==='custom'?'block':'none'}
       if(data.customPoints)document.getElementById('customPoints').value=data.customPoints;
       if(data.flBonus!==undefined)document.getElementById('flBonus').checked=data.flBonus;
       saveState();renderDrvList();renderPtsBadges();
-      toast('Season data imported ✅ ('+drivers.length+' drivers, '+races.length+' races)');
+      var sprintCount=races.filter(r=>r.weekendType==='sprint').length;
+      toast('Season data imported ✅ ('+drivers.length+' drivers, '+races.length+' races'+(sprintCount?' · '+sprintCount+' sprint weekends':'')+')');
     }catch(err){toast('Import failed — invalid file format',true)}
   };
   reader.readAsText(file);
@@ -614,6 +680,27 @@ function loadPreset(){
   raceOrder=[];renderDrvList();saveState();toast('2025 F1 Grid loaded — 20 drivers ready!');
 }
 
+// ─── WEEKEND TYPE ─────────────────────────────────────────────────────────────
+function setWeekendType(type){
+  weekendType=type;
+  var isSpr=type==='sprint';
+  document.getElementById('wtStd').className='wt-btn'+(isSpr?'':' active-std');
+  document.getElementById('wtSpr').className='wt-btn'+(isSpr?' active-spr':'');
+  document.getElementById('sprintSection').style.display=isSpr?'block':'none';
+  document.getElementById('sprintPtsPanel').style.display=isSpr?'block':'none';
+  document.getElementById('gpPtsTitle').textContent=isSpr?'🏁 Grand Prix Points':'Points Being Awarded';
+  document.getElementById('submitRaceBtn').textContent=isSpr?'✓ Submit Sprint Weekend':'✓ Submit Race';
+  if(isSpr){
+    // init sprint order from driver list order
+    var valid=sprintOrder.filter(id=>drivers.find(d=>d.id===id));
+    var missing=drivers.filter(d=>!sprintOrder.includes(d.id)).map(d=>d.id);
+    sprintOrder=[...valid,...missing];
+    renderSprintGrid();
+    renderSprintPtsBadges();
+  }
+  renderRaceGrid();renderPtsBadges();buildFLSelect();
+}
+
 // ─── RACE INPUT ───────────────────────────────────────────────────────────────
 function buildRaceInput(){
   if(!drivers.length){document.getElementById('noDriversMsg').style.display='block';document.getElementById('raceInputArea').style.display='none';return}
@@ -633,7 +720,8 @@ function buildRaceInput(){
   var valid=raceOrder.filter(id=>drivers.find(d=>d.id===id));
   var missing=drivers.filter(d=>!raceOrder.includes(d.id)).map(d=>d.id);
   raceOrder=[...valid,...missing];
-  renderRaceGrid();renderPtsBadges();buildFLSelect();
+  // reset weekend type UI
+  setWeekendType(weekendType);
 }
 
 function renderRaceGrid(){
@@ -642,12 +730,29 @@ function renderRaceGrid(){
     var d=drivers.find(x=>x.id===dId);if(!d)return'';
     var p=pts[idx]!==undefined?pts[idx]:0;
     var pc=idx===0?'p1':idx===1?'p2':idx===2?'p3':'';
-    return`<div class="rrow" draggable="true" ondragstart="ds(event,${idx})" ondragover="dov(event,${idx})" ondrop="drop(event,${idx})" ondragend="de(event)">
+    return`<div class="rrow" draggable="true" ondragstart="ds(event,${idx},'gp')" ondragover="dov(event,${idx},'gp')" ondrop="drop(event,${idx},'gp')" ondragend="de('gp')">
       <div class="plabel ${pc}">P${idx+1}</div>
       <div class="dbar" style="background:${d.color}"></div>
       <div class="rdn">${d.name}</div>
       <div class="rdt" style="color:${d.color};opacity:.7">${d.team}</div>
       <div class="pts-e">${p>0?'+'+p:'–'}</div>
+      <div class="dgh">⠿</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSprintGrid(){
+  var pts=SPRINT_PTS;
+  document.getElementById('sprintResultGrid').innerHTML=sprintOrder.map((dId,idx)=>{
+    var d=drivers.find(x=>x.id===dId);if(!d)return'';
+    var p=pts[idx]!==undefined?pts[idx]:0;
+    var pc=idx===0?'p1':idx===1?'p2':idx===2?'p3':'';
+    return`<div class="rrow rrow-sprint" draggable="true" ondragstart="ds(event,${idx},'spr')" ondragover="dov(event,${idx},'spr')" ondrop="drop(event,${idx},'spr')" ondragend="de('spr')">
+      <div class="plabel ${pc}">P${idx+1}</div>
+      <div class="dbar" style="background:${d.color}"></div>
+      <div class="rdn">${d.name}</div>
+      <div class="rdt" style="color:${d.color};opacity:.7">${d.team}</div>
+      <div class="pts-e pts-e-sprint">${p>0?'+'+p:'–'}</div>
       <div class="dgh">⠿</div>
     </div>`;
   }).join('');
@@ -660,57 +765,108 @@ function renderPtsBadges(){
     (fl?'<div class="pbadge"><div class="pp">FL</div><div class="pv" style="color:#CC88FF">+1</div></div>':'');
 }
 
+function renderSprintPtsBadges(){
+  var html=SPRINT_PTS.map((p,i)=>`<div class="pbadge"><div class="pp">P${i+1}</div><div class="pv">${p}</div></div>`).join('');
+  document.getElementById('sprintPtsBadges').innerHTML=html;
+  document.getElementById('sprintPtsBadgesPanel').innerHTML=html;
+}
+
 function buildFLSelect(){
   document.getElementById('flDriver').innerHTML='<option value="">— No bonus —</option>'+
     raceOrder.map(id=>{var d=drivers.find(x=>x.id===id);return d?`<option value="${d.id}">${d.name}</option>`:''}).join('');
 }
 
-function ds(e,i){dragSrc=i;setTimeout(()=>e.target.classList.add('dragging'),0)}
-function dov(e,i){e.preventDefault();document.querySelectorAll('.rrow').forEach(r=>r.classList.remove('drag-over'));var rows=document.querySelectorAll('.rrow');if(rows[i])rows[i].classList.add('drag-over')}
-function drop(e,i){e.preventDefault();if(dragSrc===null||dragSrc===i){dragSrc=null;return}var m=raceOrder.splice(dragSrc,1)[0];raceOrder.splice(i,0,m);dragSrc=null;renderRaceGrid();buildFLSelect()}
-function de(){document.querySelectorAll('.rrow').forEach(r=>r.classList.remove('drag-over','dragging'));dragSrc=null}
+// ─── DRAG & DROP (session-aware) ───────────────────────────────────────────────
+function ds(e,i,sess){dragSrc={i,sess};setTimeout(()=>e.target.classList.add('dragging'),0)}
+function dov(e,i,sess){
+  e.preventDefault();
+  var sel=sess==='spr'?'.rrow-sprint':'.rrow:not(.rrow-sprint)';
+  document.querySelectorAll(sel).forEach(r=>r.classList.remove('drag-over'));
+  var rows=document.querySelectorAll(sess==='spr'?'#sprintResultGrid .rrow':'#raceResultGrid .rrow');
+  if(rows[i])rows[i].classList.add('drag-over');
+}
+function drop(e,i,sess){
+  e.preventDefault();
+  if(!dragSrc||dragSrc.sess!==sess||dragSrc.i===i){dragSrc=null;return}
+  if(sess==='spr'){var m=sprintOrder.splice(dragSrc.i,1)[0];sprintOrder.splice(i,0,m);renderSprintGrid();}
+  else{var m=raceOrder.splice(dragSrc.i,1)[0];raceOrder.splice(i,0,m);renderRaceGrid();buildFLSelect();}
+  dragSrc=null;
+}
+function de(sess){
+  var sel=sess==='spr'?'#sprintResultGrid .rrow':'#raceResultGrid .rrow';
+  document.querySelectorAll(sel).forEach(r=>r.classList.remove('drag-over','dragging'));
+  dragSrc=null;
+}
 
 function submitRace(){
   var pts=getPts();
   var flId=parseInt(document.getElementById('flDriver').value)||null;
   var flBonus=document.getElementById('flBonus').checked;
   var rn=document.getElementById('raceName').value.trim()||('Race '+(races.length+1));
-  var result=raceOrder.map((dId,idx)=>{
+  var gpResults=raceOrder.map((dId,idx)=>{
     var p=pts[idx]!==undefined?pts[idx]:0;
     var isFl=flBonus&&flId===dId&&idx<10;
     if(isFl)p+=1;
     return{driverId:dId,position:idx+1,points:p,fastestLap:isFl};
   });
-  races.push({id:Date.now(),name:rn,date:new Date().toISOString(),results:result});
+  var raceObj={id:Date.now(),name:rn,date:new Date().toISOString(),results:gpResults,weekendType:weekendType};
+  if(weekendType==='sprint'){
+    var sprResults=sprintOrder.map((dId,idx)=>{
+      var p=SPRINT_PTS[idx]!==undefined?SPRINT_PTS[idx]:0;
+      return{driverId:dId,position:idx+1,points:p,fastestLap:false};
+    });
+    raceObj.sprintResults=sprResults;
+    raceObj.name=rn; // e.g. "China GP" covers the whole weekend
+  }
+  races.push(raceObj);
   raceOrder=[...drivers].sort((a,b)=>a.num-b.num).map(d=>d.id);
+  sprintOrder=[...drivers].sort((a,b)=>a.num-b.num).map(d=>d.id);
+  weekendType='standard';
   document.getElementById('raceName').value='';
-  saveState();buildRaceInput();toast(rn+' submitted! 🏁');
+  saveState();buildRaceInput();
+  toast(rn+(raceObj.weekendType==='sprint'?' Sprint Weekend':'')+ ' submitted! 🏁');
 }
 
 // ─── STATS ────────────────────────────────────────────────────────────────────
 function getDrvStats(){
   var s={};
-  drivers.forEach(d=>{s[d.id]={pts:0,wins:0,podiums:0,races:0,history:[]}});
-  races.forEach(r=>r.results.forEach(res=>{
-    if(!s[res.driverId])return;
-    s[res.driverId].pts+=res.points;
-    s[res.driverId].races++;
-    if(res.position===1)s[res.driverId].wins++;
-    if(res.position<=3)s[res.driverId].podiums++;
-    s[res.driverId].history.push({raceId:r.id,raceName:r.name,pos:res.position,pts:res.points});
-  }));
+  drivers.forEach(d=>{s[d.id]={pts:0,wins:0,podiums:0,races:0,sprintWins:0,history:[]}});
+  races.forEach(r=>{
+    // Grand Prix results
+    r.results.forEach(res=>{
+      if(!s[res.driverId])return;
+      s[res.driverId].pts+=res.points;
+      s[res.driverId].races++;
+      if(res.position===1)s[res.driverId].wins++;
+      if(res.position<=3)s[res.driverId].podiums++;
+      s[res.driverId].history.push({raceId:r.id,raceName:r.name,pos:res.position,pts:res.points,type:'gp'});
+    });
+    // Sprint results (if sprint weekend)
+    if(r.sprintResults){
+      r.sprintResults.forEach(res=>{
+        if(!s[res.driverId])return;
+        s[res.driverId].pts+=res.points;
+        if(res.position===1)s[res.driverId].sprintWins++;
+        s[res.driverId].history.push({raceId:r.id,raceName:r.name+' Sprint',pos:res.position,pts:res.points,type:'sprint'});
+      });
+    }
+  });
   return s;
 }
 
 function getConsPts(){
   var c={};
-  races.forEach(r=>r.results.forEach(res=>{
-    var d=drivers.find(x=>x.id===res.driverId);if(!d)return;
-    if(!c[d.team])c[d.team]={pts:0,wins:0,drivers:new Set(),color:d.color};
-    c[d.team].pts+=res.points;
-    if(res.position===1)c[d.team].wins++;
-    c[d.team].drivers.add(d.id);
-  }));
+  races.forEach(r=>{
+    var allResults=[...r.results];
+    if(r.sprintResults)allResults=[...allResults,...r.sprintResults];
+    allResults.forEach(res=>{
+      var d=drivers.find(x=>x.id===res.driverId);if(!d)return;
+      if(!c[d.team])c[d.team]={pts:0,wins:0,drivers:new Set(),color:d.color};
+      c[d.team].pts+=res.points;
+      if(res.position===1&&r.results.includes(res))c[d.team].wins++; // only GP wins
+      c[d.team].drivers.add(d.id);
+    });
+  });
   Object.values(c).forEach(x=>x.drivers=[...x.drivers]);
   return c;
 }
@@ -728,9 +884,10 @@ function buildDrvStandings(){
     var d=drivers.find(x=>x.id==id);if(!d)return'';
     var rc=rank===0?'r1':rank===1?'r2':rank===2?'r3':'';
     var gap=rank===0?'<span style="color:var(--gold);font-family:\'Barlow Condensed\';font-size:13px;letter-spacing:1px">LEADER</span>':'–'+(ldP-s.pts);
-    var hdots=s.history.slice(-12).map(h=>{
-      var cls=h.pos===1?'win':h.pos<=3?'podium':h.pts>0?'points':'';
-      return`<div class="rdot ${cls}" title="${h.raceName}: P${h.pos} (+${h.pts}pts)">P${h.pos}</div>`;
+    var hdots=s.history.slice(-16).map(h=>{
+      var cls=h.type==='sprint'&&h.pos===1?'sprint-win':h.pos===1?'win':h.pos<=3?'podium':h.pts>0?'points':'';
+      var label=h.type==='sprint'?'S'+h.pos:'P'+h.pos;
+      return`<div class="rdot ${cls}" title="${h.raceName}: ${label} (+${h.pts}pts)">${label}</div>`;
     }).join('');
     return`<tr><td class="rnk ${rc}">${rank+1}</td>
       <td><div class="dncol" style="color:${d.color}">${d.name}</div>
@@ -739,6 +896,7 @@ function buildDrvStandings(){
       <td><div style="font-family:'Barlow Condensed';font-size:14px">${d.team}</div></td>
       <td style="text-align:center;font-family:'Orbitron';font-size:14px">${s.races}</td>
       <td style="text-align:center;font-family:'Orbitron';font-size:14px;color:var(--gold)">${s.wins}</td>
+      <td style="text-align:center;font-family:'Orbitron';font-size:14px;color:var(--sprint)">${s.sprintWins||0}</td>
       <td style="text-align:center;font-family:'Orbitron';font-size:14px">${s.podiums}</td>
       <td class="gcol">${gap}</td>
       <td class="pbc"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Progress</div>
@@ -789,16 +947,19 @@ function buildHistory(){
     document.getElementById('raceDetailPanel').innerHTML='<div class="empty" style="padding:60px 20px;border:1px solid var(--border);border-radius:4px;background:var(--panel)"><div class="ico">👆</div><p>Click a race to see full results</p></div>';
     return;
   }
-  log.innerHTML=[...races].reverse().map((r,i)=>{
+  log.innerHTML=[...races].reverse().map((r)=>{
     var rIdx=races.indexOf(r)+1;
+    var isSprint=r.weekendType==='sprint';
+    var isReset=r.results.every(res=>res.points===0)&&(!r.sprintResults||r.sprintResults.every(res=>res.points===0));
     var top3=r.results.slice(0,3).map(res=>{var d=drivers.find(x=>x.id===res.driverId);return d?`<span class="pchip" style="color:${d.color};border-color:${d.color}40">${d.name.split(' ').pop()}</span>`:''}).join('');
-    var isReset=r.results.every(res=>res.points===0);
-    return`<div class="rli">
+    var sprintWinner=isSprint&&r.sprintResults&&r.sprintResults[0]?drivers.find(x=>x.id===r.sprintResults[0].driverId):null;
+    return`<div class="rli" style="${isSprint?'border-left:3px solid var(--sprint)':''}">
       <div onclick="showRaceDetail(${r.id})" style="display:contents;cursor:pointer">
         <div class="rlnum" style="${isReset?'color:var(--text-muted)':''}">R${rIdx}</div>
         <div>
-          <div class="rlname">${r.name}${isReset?' <span style="font-family:\'Barlow Condensed\';font-size:11px;color:var(--orange);letter-spacing:1px;margin-left:6px">RESET</span>':''}</div>
+          <div class="rlname">${r.name}${isSprint?'<span class="history-sprint-badge">SPRINT WKD</span>':''}${isReset?' <span style="font-family:\'Barlow Condensed\';font-size:11px;color:var(--orange);letter-spacing:1px;margin-left:6px">RESET</span>':''}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${new Date(r.date).toLocaleDateString()}</div>
+          ${isSprint&&sprintWinner?`<div style="font-size:11px;color:var(--sprint);margin-top:2px">⚡ Sprint: ${sprintWinner.name.split(' ').pop()}</div>`:''}
           <div class="rlpod" style="margin-top:4px">${isReset?'<span style="font-size:11px;color:var(--text-muted)">No points recorded</span>':top3}</div>
         </div>
       </div>
@@ -827,10 +988,11 @@ function confirmResetRace(raceId){
   showConfirm(
     'Reset Race Results',
     'Zero out all points for "'+r.name+'"?',
-    'The race will remain in history but all driver points will be set to 0. Standings will update immediately.',
+    'The race will remain in history but all driver points (including sprint) will be set to 0. Standings will update immediately.',
     'Reset Points','btn-w',
     function(){
       r.results=r.results.map(res=>({...res,points:0,fastestLap:false}));
+      if(r.sprintResults)r.sprintResults=r.sprintResults.map(res=>({...res,points:0}));
       saveState();buildHistory();
       document.getElementById('raceDetailPanel').innerHTML='<div class="empty" style="padding:60px 20px;border:1px solid var(--border);border-radius:4px;background:var(--panel)"><div class="ico">↺</div><p>'+r.name+' results cleared</p></div>';
       toast(r.name+' results reset — standings updated');
@@ -841,19 +1003,42 @@ function confirmResetRace(raceId){
 function showRaceDetail(raceId){
   var r=races.find(x=>x.id===raceId);if(!r)return;
   var rIdx=races.indexOf(r)+1;
-  var rows=r.results.map((res,idx)=>{
-    var d=drivers.find(x=>x.id===res.driverId);if(!d)return'';
-    var rc=idx===0?'r1':idx===1?'r2':idx===2?'r3':'';
-    return`<tr><td class="rnk ${rc}">${res.position}</td>
-      <td><div style="font-family:'Barlow Condensed';font-size:15px;font-weight:700;color:${d.color}">${d.name}</div><div style="font-size:11px;color:var(--text-muted)">${d.team}</div></td>
-      <td style="font-family:'Orbitron';font-size:14px;font-weight:700;color:var(--green);text-align:right">+${res.points}${res.fastestLap?' <span class="flbadge" style="margin-left:6px">FL</span>':''}</td></tr>`;
-  }).join('');
+  var isSprint=r.weekendType==='sprint';
+
+  function makeRows(results,colorFn){
+    return results.map((res,idx)=>{
+      var d=drivers.find(x=>x.id===res.driverId);if(!d)return'';
+      var rc=idx===0?'r1':idx===1?'r2':idx===2?'r3':'';
+      return`<tr><td class="rnk ${rc}">${res.position}</td>
+        <td><div style="font-family:'Barlow Condensed';font-size:15px;font-weight:700;color:${d.color}">${d.name}</div><div style="font-size:11px;color:var(--text-muted)">${d.team}</div></td>
+        <td style="font-family:'Orbitron';font-size:14px;font-weight:700;color:${colorFn};text-align:right">+${res.points}${res.fastestLap?' <span class="flbadge" style="margin-left:6px">FL</span>':''}</td></tr>`;
+    }).join('');
+  }
+
+  var sprintBlock='';
+  if(isSprint&&r.sprintResults){
+    var sprintRows=makeRows(r.sprintResults,'var(--sprint)');
+    sprintBlock=`
+    <div style="border-bottom:1px solid var(--border);padding-bottom:0">
+      <div style="padding:10px 18px;background:rgba(255,107,0,.06);border-bottom:1px solid rgba(255,107,0,.2);display:flex;align-items:center;gap:10px">
+        <span class="sprint-badge">SPRINT</span>
+        <span style="font-family:'Barlow Condensed';font-size:13px;font-weight:600;color:var(--sprint)">Sprint Race Results</span>
+      </div>
+      <table class="stbl"><thead><tr><th>POS</th><th>DRIVER</th><th style="text-align:right">POINTS</th></tr></thead><tbody>${sprintRows}</tbody></table>
+    </div>`;
+  }
+
+  var gpRows=makeRows(r.results,'var(--green)');
   document.getElementById('raceDetailPanel').innerHTML=`<div class="panel">
     <div class="panel-header">
-      <div class="panel-title">Round ${rIdx} · ${r.name}</div>
+      <div class="panel-title">Round ${rIdx} · ${r.name}${isSprint?' <span class="history-sprint-badge" style="margin-left:8px">SPRINT WKD</span>':''}</div>
       <span style="font-size:11px;color:var(--text-muted)">${new Date(r.date).toLocaleDateString()}</span>
     </div>
-    <table class="stbl"><thead><tr><th>POS</th><th>DRIVER</th><th style="text-align:right">POINTS</th></tr></thead><tbody>${rows}</tbody></table>
+    ${sprintBlock}
+    <div style="${isSprint?'padding-top:0':''}">
+      ${isSprint?`<div style="padding:10px 18px;background:rgba(232,0,45,.05);border-bottom:1px solid rgba(232,0,45,.2);display:flex;align-items:center;gap:10px"><span class="gp-badge">GRAND PRIX</span><span style="font-family:'Barlow Condensed';font-size:13px;font-weight:600;color:var(--red)">Race Results</span></div>`:''}
+      <table class="stbl"><thead><tr><th>POS</th><th>DRIVER</th><th style="text-align:right">POINTS</th></tr></thead><tbody>${gpRows}</tbody></table>
+    </div>
     <div style="display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--border);background:rgba(255,255,255,.02)">
       <button class="btn btn-edit-action btn-sm" onclick="openEditRaceModal(${r.id})">✏ Edit Results</button>
       <button class="btn btn-w btn-sm" onclick="confirmResetRace(${r.id})">↺ Reset Points</button>
@@ -877,7 +1062,21 @@ if(!loaded){loadPreset()}
       <label>Race Name</label>
       <input type="text" id="editRaceName" placeholder="Race name">
     </div>
-    <div class="panel-title" style="margin:12px 0 8px;font-size:11px;letter-spacing:2px;color:var(--text-muted)">FINISHING ORDER — drag to reorder</div>
+
+    <!-- Sprint session (shown only for sprint weekends) -->
+    <div id="editSprintSection" style="display:none;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="sprint-badge">SPRINT</span>
+        <span style="font-family:'Barlow Condensed';font-size:12px;letter-spacing:2px;color:var(--sprint)">SPRINT RACE ORDER — drag to reorder</span>
+      </div>
+      <div class="modal-race-grid" id="editSprintGrid" style="max-height:260px;border:1px solid rgba(255,107,0,.2);border-radius:3px;padding:6px"></div>
+    </div>
+
+    <!-- GP section -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px" id="editGpLabel">
+      <span class="gp-badge">GRAND PRIX</span>
+      <span style="font-family:'Barlow Condensed';font-size:12px;letter-spacing:2px;color:var(--red)">RACE ORDER — drag to reorder</span>
+    </div>
     <div class="modal-race-grid" id="editRaceGrid"></div>
     <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--border);margin-bottom:4px">
       <span class="flbadge">FASTEST LAP</span>
@@ -893,18 +1092,29 @@ if(!loaded){loadPreset()}
 
 <script>
 // ─── EDIT RACE ────────────────────────────────────────────────────────────────
-var editRaceOrder=[], editDragSrc=null;
+var editRaceOrder=[], editSprintOrder=[], editDragSrc=null, editDragSess=null;
 
 function openEditRaceModal(raceId){
   var r=races.find(x=>x.id===raceId);if(!r)return;
+  var isSprint=r.weekendType==='sprint';
   document.getElementById('editRaceId').value=raceId;
-  document.getElementById('editRaceTitle').textContent='✏ Edit — '+r.name;
+  document.getElementById('editRaceTitle').textContent='✏ Edit — '+r.name+(isSprint?' (Sprint Weekend)':'');
   document.getElementById('editRaceName').value=r.name;
+  document.getElementById('editSprintSection').style.display=isSprint?'block':'none';
+  document.getElementById('editGpLabel').style.display=isSprint?'flex':'none';
 
-  // Build order from existing results, then append any missing drivers
+  // GP order
   var existingIds=r.results.map(res=>res.driverId);
   var missing=drivers.filter(d=>!existingIds.includes(d.id)).map(d=>d.id);
   editRaceOrder=[...existingIds,...missing];
+
+  // Sprint order
+  if(isSprint&&r.sprintResults){
+    var spExisting=r.sprintResults.map(res=>res.driverId);
+    var spMissing=drivers.filter(d=>!spExisting.includes(d.id)).map(d=>d.id);
+    editSprintOrder=[...spExisting,...spMissing];
+    renderEditSprintGrid();
+  }
 
   renderEditRaceGrid(r);
   buildEditFlSelect(r);
@@ -913,14 +1123,13 @@ function openEditRaceModal(raceId){
 
 function renderEditRaceGrid(r){
   var pts=getPts();
-  var flBonus=document.getElementById('flBonus').checked;
   document.getElementById('editRaceGrid').innerHTML=editRaceOrder.map((dId,idx)=>{
     var d=drivers.find(x=>x.id===dId);if(!d)return'';
     var p=pts[idx]!==undefined?pts[idx]:0;
     var pc=idx===0?'p1':idx===1?'p2':idx===2?'p3':'';
     return`<div class="erow" draggable="true"
-      ondragstart="edStart(event,${idx})" ondragover="edOver(event,${idx})"
-      ondrop="edDrop(event,${idx})" ondragend="edEnd()">
+      ondragstart="edStart(event,${idx},'gp')" ondragover="edOver(event,${idx},'gp')"
+      ondrop="edDrop(event,${idx},'gp')" ondragend="edEnd()">
       <div class="plabel ${pc}">P${idx+1}</div>
       <div class="dbar" style="background:${d.color}"></div>
       <div class="rdn">${d.name}</div>
@@ -930,25 +1139,54 @@ function renderEditRaceGrid(r){
   }).join('');
 }
 
+function renderEditSprintGrid(){
+  document.getElementById('editSprintGrid').innerHTML=editSprintOrder.map((dId,idx)=>{
+    var d=drivers.find(x=>x.id===dId);if(!d)return'';
+    var p=SPRINT_PTS[idx]!==undefined?SPRINT_PTS[idx]:0;
+    var pc=idx===0?'p1':idx===1?'p2':idx===2?'p3':'';
+    return`<div class="erow" style="border-color:rgba(255,107,0,.2)" draggable="true"
+      ondragstart="edStart(event,${idx},'spr')" ondragover="edOver(event,${idx},'spr')"
+      ondrop="edDrop(event,${idx},'spr')" ondragend="edEnd()">
+      <div class="plabel ${pc}">P${idx+1}</div>
+      <div class="dbar" style="background:${d.color}"></div>
+      <div class="rdn">${d.name}</div>
+      <div class="pts-e" style="color:var(--sprint)">${p>0?'+'+p:'–'}</div>
+      <div class="dgh">⠿</div>
+    </div>`;
+  }).join('');
+}
+
 function buildEditFlSelect(r){
   var flSel=document.getElementById('editFlDriver');
   flSel.innerHTML='<option value="">— No bonus —</option>'+
-    editRaceOrder.map(id=>{var d=drivers.find(x=>x.id===id);return d?`<option value="${d.id}"${r.results.some(res=>res.driverId===d.id&&res.fastestLap)?` selected`:''} >${d.name}</option>`:''}).join('');
+    editRaceOrder.map(id=>{var d=drivers.find(x=>x.id===id);return d?`<option value="${d.id}"${r.results.some(res=>res.driverId===d.id&&res.fastestLap)?' selected':''} >${d.name}</option>`:''}).join('');
 }
 
-function edStart(e,i){editDragSrc=i;setTimeout(()=>e.target.classList.add('dragging'),0)}
-function edOver(e,i){e.preventDefault();document.querySelectorAll('.erow').forEach(r=>r.classList.remove('drag-over'));var rows=document.querySelectorAll('.erow');if(rows[i])rows[i].classList.add('drag-over')}
-function edDrop(e,i){
+function edStart(e,i,sess){editDragSrc=i;editDragSess=sess;setTimeout(()=>e.target.classList.add('dragging'),0)}
+function edOver(e,i,sess){
   e.preventDefault();
-  if(editDragSrc===null||editDragSrc===i){editDragSrc=null;return}
-  var m=editRaceOrder.splice(editDragSrc,1)[0];
-  editRaceOrder.splice(i,0,m);
-  editDragSrc=null;
-  var r=races.find(x=>x.id===+document.getElementById('editRaceId').value);
-  renderEditRaceGrid(r||{results:[]});
-  buildEditFlSelect(r||{results:[]});
+  if(editDragSess!==sess)return;
+  var cont=sess==='spr'?document.getElementById('editSprintGrid'):document.getElementById('editRaceGrid');
+  cont.querySelectorAll('.erow').forEach(r=>r.classList.remove('drag-over'));
+  var rows=cont.querySelectorAll('.erow');
+  if(rows[i])rows[i].classList.add('drag-over');
 }
-function edEnd(){document.querySelectorAll('.erow').forEach(r=>r.classList.remove('drag-over','dragging'));editDragSrc=null}
+function edDrop(e,i,sess){
+  e.preventDefault();
+  if(editDragSrc===null||editDragSess!==sess||editDragSrc===i){editDragSrc=null;return}
+  if(sess==='spr'){
+    var m=editSprintOrder.splice(editDragSrc,1)[0];editSprintOrder.splice(i,0,m);renderEditSprintGrid();
+  }else{
+    var m=editRaceOrder.splice(editDragSrc,1)[0];editRaceOrder.splice(i,0,m);
+    var r=races.find(x=>x.id===+document.getElementById('editRaceId').value);
+    renderEditRaceGrid(r||{results:[]});buildEditFlSelect(r||{results:[]});
+  }
+  editDragSrc=null;
+}
+function edEnd(){
+  document.querySelectorAll('.erow').forEach(r=>r.classList.remove('drag-over','dragging'));
+  editDragSrc=null;editDragSess=null;
+}
 
 function saveEditedRace(){
   var raceId=+document.getElementById('editRaceId').value;
@@ -964,10 +1202,14 @@ function saveEditedRace(){
     if(isFl)p+=1;
     return{driverId:dId,position:idx+1,points:p,fastestLap:isFl};
   });
+  if(r.weekendType==='sprint'&&editSprintOrder.length){
+    r.sprintResults=editSprintOrder.map((dId,idx)=>{
+      var p=SPRINT_PTS[idx]!==undefined?SPRINT_PTS[idx]:0;
+      return{driverId:dId,position:idx+1,points:p,fastestLap:false};
+    });
+  }
   closeModal('editRaceModal');
-  saveState();
-  buildHistory();
-  showRaceDetail(raceId);
+  saveState();buildHistory();showRaceDetail(raceId);
   toast(r.name+' updated ✏');
 }
 </script>
